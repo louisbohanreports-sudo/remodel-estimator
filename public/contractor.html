@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contractor Dashboard — Remodel Estimator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+    /* Login screen */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+    }
+    .login-box {
+      background: white; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .login-box h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; }
+    .login-box p { color: #888; font-size: 0.88rem; margin-bottom: 28px; }
+
+    .field { margin-bottom: 16px; }
+    label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+    input { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e5ea; border-radius: 10px; font-family: inherit; font-size: 0.95rem; outline: none; }
+    input:focus { border-color: #0f3460; }
+    .error-msg { color: #dc2626; font-size: 0.82rem; margin-top: 8px; display: none; }
+
+    .btn { width: 100%; padding: 14px; background: #0f3460; color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+    .btn:hover { background: #1a4a7a; }
+    .btn:disabled { opacity: 0.5; }
+
+    /* Dashboard */
+    #dashboard { display: none; }
+    .topbar {
+      background: white; padding: 14px 24px; display: flex; align-items: center;
+      justify-content: space-between; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-logo { font-weight: 700; font-size: 1rem; color: #0f3460; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-name { font-size: 0.88rem; color: #666; }
+    .logout-btn { font-size: 0.82rem; color: #dc2626; cursor: pointer; background: none; border: none; font-family: inherit; }
+
+    .main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+    .stat-label { font-size: 0.78rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .stat-value { font-size: 1.6rem; font-weight: 800; color: #1a1a2e; }
+    .stat-sub { font-size: 0.78rem; color: #aaa; margin-top: 4px; }
+
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font-size: 1rem; font-weight: 700; }
+
+    .table-wrap { background: white; border-radius: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 12px 16px; text-align: left; font-size: 0.78rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #f0f0f0; background: #fafbfc; }
+    td { padding: 14px 16px; font-size: 0.88rem; border-bottom: 1px solid #f8f9fb; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafbff; }
+    .table-empty { text-align: center; padding: 40px; color: #aaa; font-size: 0.9rem; }
+
+    .status-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    }
+    .status-new { background: #dbeafe; color: #1e40af; }
+    .status-viewed { background: #fef3c7; color: #92400e; }
+    .status-quoted { background: #e0e7ff; color: #4338ca; }
+    .status-won { background: #dcfce7; color: #166534; }
+    .status-lost { background: #fee2e2; color: #991b1b; }
+
+    .detail-btn { padding: 5px 12px; background: #0f3460; color: white; border: none; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+
+    /* Settings panel */
+    .settings-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .settings-card { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); margin-top: 24px; }
+    .settings-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; }
+    .settings-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .range-input { width: 100%; accent-color: #0f3460; }
+    .range-val { font-weight: 700; color: #0f3460; }
+    .save-btn { padding: 10px 20px; background: #0f3460; color: white; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 20px; padding: 32px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; margin: 16px; }
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+    .modal-sub { font-size: 0.85rem; color: #888; margin-bottom: 24px; }
+    .modal-close { float: right; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #888; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 0.88rem; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key { color: #888; }
+    .detail-val { font-weight: 600; }
+    .profit-highlight { background: #dcfce7; border-radius: 12px; padding: 16px 20px; margin-top: 16px; }
+    .profit-title { font-size: 0.78rem; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .profit-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; }
+    .profit-row .profit-label { color: #555; }
+    .profit-row .profit-num { font-weight: 700; color: #166534; }
+    .status-select { padding: 6px 12px; border: 1.5px solid #e2e5ea; border-radius: 8px; font-family: inherit; font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>🏠 Contractor Login</h1>
+    <p>Sign in to view and manage your estimates.</p>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="contractor1" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="error-msg" id="loginError">Invalid username or password.</div>
+    <button class="btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="topbar-logo">🏠 Remodel Estimator</div>
+    <div class="topbar-right">
+      <span class="topbar-name" id="topbarName"></span>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-label">Total Leads</div>
+        <div class="stat-value" id="stat-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Won</div>
+        <div class="stat-value" id="stat-won">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pipeline Value</div>
+        <div class="stat-value" id="stat-pipeline">—</div>
+        <div class="stat-sub">low estimate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">New Leads</div>
+        <div class="stat-value" id="stat-new">—</div>
+        <div class="stat-sub">need review</div>
+      </div>
+    </div>
+
+    <!-- Estimates table -->
+    <div class="section-header">
+      <div class="section-title">Incoming Estimates</div>
+      <a href="/" target="_blank" style="font-size:0.82rem; color:#0f3460;">+ Share client form ↗</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Client</th>
+            <th>Address</th>
+            <th>Est. Range</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="estimatesTable">
+          <tr><td colspan="7" class="table-empty">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-card">
+      <div class="settings-title">⚙️ Margin Settings</div>
+      <p style="font-size:0.82rem; color:#888; margin-bottom:16px;">These are applied to all estimates on the backend. Clients never see these numbers.</p>
+      <div class="settings-row">
+        <div class="settings-field">
+          <label>Overhead: <span class="range-val" id="overheadVal">15</span>%</label>
+          <input type="range" class="range-input" id="overheadPct" min="5" max="40" value="15" oninput="document.getElementById('overheadVal').textContent=this.value">
+        </div>
+        <div class="settings-field">
+          <label>Profit Margin: <span class="range-val" id="profitVal">20</span>%</label>
+          <input type="range" class="range-input" id="profitPct" min="5" max="50" value="20" oninput="document.getElementById('profitVal').textContent=this.value">
+        </div>
+      </div>
+      <button class="save-btn" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle">Estimate Detail</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+  let authToken = localStorage.getItem('contractor_token');
+  let contractorData = JSON.parse(localStorage.getItem('contractor_data') || 'null');
+
+  if (authToken) showDashboard();
+
+  async function doLogin() {
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        authToken = data.token;
+        contractorData = data.contractor;
+        localStorage.setItem('contractor_token', authToken);
+        localStorage.setItem('contractor_data', JSON.stringify(contractorData));
+        showDashboard();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Sign In';
+      }
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Sign In';
+    }
+  }
+
+  function showDashboard() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    if (contractorData) {
+      document.getElementById('topbarName').textContent = contractorData.business_name;
+      document.getElementById('overheadPct').value = contractorData.overhead_pct || 15;
+      document.getElementById('overheadVal').textContent = contractorData.overhead_pct || 15;
+      document.getElementById('profitPct').value = contractorData.profit_pct || 20;
+      document.getElementById('profitVal').textContent = contractorData.profit_pct || 20;
+    }
+    loadStats();
+    loadEstimates();
+  }
+
+  function logout() {
+    localStorage.removeItem('contractor_token');
+    localStorage.removeItem('contractor_data');
+    location.reload();
+  }
+
+  const headers = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` });
+
+  async function loadStats() {
+    const res = await fetch('/api/contractor/stats', { headers: headers() });
+    const data = await res.json();
+    document.getElementById('stat-total').textContent = data.total_estimates;
+    const won = data.by_status.find(s => s.status === 'won');
+    const newLeads = data.by_status.find(s => s.status === 'new');
+    document.getElementById('stat-won').textContent = won ? won.count : 0;
+    document.getElementById('stat-new').textContent = newLeads ? newLeads.count : 0;
+    document.getElementById('stat-pipeline').textContent = '$' + (data.pipeline_value.low / 1000).toFixed(0) + 'K';
+  }
+
+  async function loadEstimates() {
+    const res = await fetch('/api/contractor/estimates', { headers: headers() });
+    const data = await res.json();
+    const tbody = document.getElementById('estimatesTable');
+
+    if (!data.estimates || !data.estimates.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No estimates yet. <a href="/" target="_blank">Share the client form ↗</a></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.estimates.map(e => `
+      <tr>
+        <td style="color:#aaa; font-size:0.8rem">#${e.id}</td>
+        <td><strong>${e.client_name || '(no name)'}</strong><br><span style="color:#888; font-size:0.78rem">${e.client_email || ''}</span></td>
+        <td style="color:#666; font-size:0.82rem">${e.project_address || '—'}</td>
+        <td style="font-weight:600">$${Math.round(e.total_low / 1000)}K – $${Math.round(e.total_high / 1000)}K</td>
+        <td><span class="status-badge status-${e.status}">${e.status}</span></td>
+        <td style="color:#888; font-size:0.8rem">${new Date(e.created_at).toLocaleDateString()}</td>
+        <td><button class="detail-btn" onclick="openDetail(${e.id})">View</button></td>
+      </tr>
+    `).join('');
+  }
+
+  async function openDetail(id) {
+    const res = await fetch(`/api/contractor/estimates/${id}`, { headers: headers() });
+    const data = await res.json();
+    const e = data.estimate;
+    const calc = data.calculation;
+
+    document.getElementById('modalTitle').textContent = e.client_name || 'Unnamed Lead';
+    document.getElementById('modalSub').textContent = `${e.project_address || 'No address'} · Submitted ${new Date(e.created_at).toLocaleDateString()}`;
+
+    const cv = calc.contractorView;
+    document.getElementById('modalContent').innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.8rem; font-weight:700; color:#888; text-transform:uppercase; margin-bottom:10px">Project Details</div>
+        <div class="detail-row"><span class="detail-key">Kitchen Size</span><span class="detail-val">${e.kitchen_length} × ${e.kitchen_width} ft (${calc.sqft} sq ft)</span></div>
+        <div class="detail-row"><span class="detail-key">House Age</span><span class="detail-val">${e.house_age_range?.replace(/_/g, '–') || '—'}</span></div>
+        <div class="detail-row"><span class="detail-key">Walls Moving</span><span class="detail-val">${e.walls_moving ? 'Yes' : 'No'}</span></div>
+        <div class="detail-row"><span class="detail-key">Plumbing Moving</span><span class="detail-val">${e.plumbing_moving ? 'Yes' : 'No'}</span></div>
+        <div class="detail-row"><span class="detail-key">Electrical Upgrade</span><span class="detail-val">${e.electrical_upgrade ? 'Yes' : 'No'}</span></div>
+        <div class="detail-row"><span class="detail-key">Cabinet Tier</span><span class="detail-val">${e.cabinet_tier}</span></div>
+        <div class="detail-row"><span class="detail-key">Countertop Tier</span><span class="detail-val">${e.countertop_tier}</span></div>
+        <div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val">${e.additional_notes || '—'}</span></div>
+      </div>
+
+      <div class="profit-highlight">
+        <div class="profit-title">💰 Your Numbers (Private)</div>
+        <div class="profit-row"><span class="profit-label">Cost to Complete</span><span class="profit-num">$${Math.round(cv.costToComplete.low).toLocaleString()} – $${Math.round(cv.costToComplete.high).toLocaleString()}</span></div>
+        <div class="profit-row"><span class="profit-label">Overhead (${cv.overhead.pct}%)</span><span class="profit-num">$${Math.round(cv.overhead.low).toLocaleString()} – $${Math.round(cv.overhead.high).toLocaleString()}</span></div>
+        <div class="profit-row"><span class="profit-label">Profit (${cv.profit.pct}%)</span><span class="profit-num">$${Math.round(cv.profit.low).toLocaleString()} – $${Math.round(cv.profit.high).toLocaleString()}</span></div>
+        <div class="profit-row" style="padding-top:8px; border-top:1px solid rgba(0,0,0,0.1); margin-top:6px">
+          <span class="profit-label" style="font-weight:700">Present to Client</span>
+          <span class="profit-num" style="font-size:1.1rem">$${Math.round(cv.proposal.low).toLocaleString()} – $${Math.round(cv.proposal.high).toLocaleString()}</span>
+        </div>
+        <div style="text-align:right; font-size:0.75rem; color:#166534; margin-top:6px">Net margin ~${cv.marginPct}%</div>
+      </div>
+
+      <div style="margin-top:20px">
+        <label style="display:block; font-size:0.78rem; font-weight:700; color:#888; text-transform:uppercase; margin-bottom:8px">Update Status</label>
+        <select class="status-select" id="statusSelect-${id}" onchange="updateStatus(${id}, this.value)">
+          <option value="new" ${e.status==='new'?'selected':''}>New</option>
+          <option value="viewed" ${e.status==='viewed'?'selected':''}>Viewed</option>
+          <option value="quoted" ${e.status==='quoted'?'selected':''}>Quoted</option>
+          <option value="won" ${e.status==='won'?'selected':''}>Won ✅</option>
+          <option value="lost" ${e.status==='lost'?'selected':''}>Lost ❌</option>
+        </select>
+      </div>
+    `;
+
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    loadEstimates();
+    loadStats();
+  }
+
+  async function updateStatus(id, status) {
+    await fetch(`/api/contractor/estimates/${id}/status`, {
+      method: 'PATCH',
+      headers: headers(),
+      body: JSON.stringify({ status })
+    });
+  }
+
+  async function saveSettings() {
+    const overhead = parseInt(document.getElementById('overheadPct').value);
+    const profit = parseInt(document.getElementById('profitPct').value);
+
+    await fetch('/api/contractor/profile', {
+      method: 'PATCH',
+      headers: headers(),
+      body: JSON.stringify({ overhead_pct: overhead, profit_pct: profit })
+    });
+
+    contractorData.overhead_pct = overhead;
+    contractorData.profit_pct = profit;
+    localStorage.setItem('contractor_data', JSON.stringify(contractorData));
+    alert('Settings saved!');
+  }
+
+  // Enter key login
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+    if (e.key === 'Escape') closeModal();
+  });
+</script>
+</body>
+</html>

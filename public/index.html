@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Remodel Estimator — SF Bay Area</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f8f9fb; color: #1a1a2e; min-height: 100vh; }
+
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: white; padding: 48px 24px 40px; text-align: center;
+    }
+    .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; margin-bottom: 10px; }
+    .hero p { color: rgba(255,255,255,0.7); font-size: 1rem; }
+    .hero .badge {
+      display: inline-block; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 99px; padding: 4px 14px; font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.05em; margin-bottom: 16px; color: #a5f3fc;
+    }
+
+    .container { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+
+    .card {
+      background: white; border-radius: 16px; padding: 28px 28px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 1.05rem; font-weight: 700; color: #1a1a2e;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .card-title span { font-size: 1.3rem; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 540px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: 0.82rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    input[type="text"], input[type="number"], input[type="email"], input[type="tel"], select, textarea {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #e2e5ea; border-radius: 10px;
+      font-family: inherit; font-size: 0.95rem; color: #1a1a2e; background: #fafbfc;
+      outline: none; transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #0f3460; background: white; }
+
+    /* Scope checkboxes */
+    .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 480px) { .scope-grid { grid-template-columns: 1fr; } }
+
+    .scope-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #f8f9fb; border-radius: 10px;
+      border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s;
+    }
+    .scope-item:hover { border-color: #0f3460; }
+    .scope-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #0f3460; cursor: pointer; }
+    .scope-item label { font-size: 0.88rem; font-weight: 500; color: #333; cursor: pointer; margin: 0; text-transform: none; letter-spacing: 0; }
+
+    /* Toggle switches */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: 0.9rem; color: #333; }
+    .toggle-sub { font-size: 0.78rem; color: #888; }
+    .switch { position: relative; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background: #ddd; border-radius: 34px; transition: 0.2s;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background: white; border-radius: 50%; transition: 0.2s;
+    }
+    input:checked + .slider { background: #0f3460; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* Tier selector */
+    .tier-select { display: flex; gap: 8px; }
+    .tier-btn {
+      flex: 1; padding: 8px 6px; border: 1.5px solid #e2e5ea; border-radius: 8px;
+      background: white; font-size: 0.8rem; font-weight: 600; color: #666; cursor: pointer;
+      transition: all 0.15s; text-align: center;
+    }
+    .tier-btn:hover { border-color: #0f3460; color: #0f3460; }
+    .tier-btn.active { background: #0f3460; border-color: #0f3460; color: white; }
+
+    /* Result card */
+    .result-card {
+      background: linear-gradient(135deg, #0f3460, #1a1a2e);
+      border-radius: 16px; padding: 32px; color: white; text-align: center; display: none;
+    }
+    .result-card.visible { display: block; }
+    .result-label { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .result-range { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; margin-bottom: 6px; }
+    .result-note { font-size: 0.82rem; color: rgba(255,255,255,0.5); }
+
+    .breakdown-toggle {
+      display: none; margin-top: 20px; padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+    }
+    .breakdown-toggle.visible { display: block; }
+    .breakdown-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 7px 0; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .breakdown-item:last-child { border-bottom: none; }
+    .breakdown-item .name { color: rgba(255,255,255,0.75); }
+    .breakdown-item .amount { font-weight: 600; color: white; }
+
+    .btn-primary {
+      width: 100%; padding: 16px; background: #0f3460; color: white;
+      border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; margin-top: 8px;
+    }
+    .btn-primary:hover { background: #1a4a7a; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-outline {
+      width: 100%; padding: 14px; background: transparent; color: rgba(255,255,255,0.8);
+      border: 1.5px solid rgba(255,255,255,0.3); border-radius: 12px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s; margin-top: 10px;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+    .progress-steps {
+      display: flex; justify-content: center; gap: 6px; margin-bottom: 28px;
+    }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e5ea; transition: background 0.3s; }
+    .step-dot.active { background: #0f3460; }
+
+    .step-section { display: none; }
+    .step-section.active { display: block; }
+
+    .nav-row { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-back {
+      flex: 1; padding: 14px; background: white; color: #666; border: 1.5px solid #e2e5ea;
+      border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-back:hover { border-color: #999; }
+    .btn-next {
+      flex: 2; padding: 14px; background: #0f3460; color: white; border: none;
+      border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-next:hover { background: #1a4a7a; }
+
+    .disclaimer { font-size: 0.78rem; color: #999; text-align: center; margin-top: 24px; line-height: 1.6; }
+
+    .success-banner {
+      display: none; background: #dcfce7; border: 1px solid #86efac;
+      border-radius: 12px; padding: 16px 20px; margin-top: 16px;
+      font-size: 0.9rem; color: #166534;
+    }
+    .success-banner.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">SF Bay Area · Kitchen Remodels</div>
+  <h1>Get Your Kitchen Remodel Estimate</h1>
+  <p>Answer a few questions and get an instant price range — no sign-up required.</p>
+</div>
+
+<div class="container">
+  <div class="progress-steps" id="steps">
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+  </div>
+
+  <!-- Step 1: Your Info -->
+  <div class="step-section active" id="step-1">
+    <div class="card">
+      <div class="card-title"><span>👤</span> Your Contact Info</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Your Name</label>
+          <input type="text" id="client_name" placeholder="Jane Smith">
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" id="client_phone" placeholder="(415) 555-0100">
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="client_email" placeholder="jane@example.com">
+        </div>
+        <div class="field">
+          <label>Project Address</label>
+          <input type="text" id="project_address" placeholder="123 Main St, San Francisco">
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-next" onclick="nextStep()">Next: Kitchen Details →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Kitchen Details -->
+  <div class="step-section" id="step-2">
+    <div class="card">
+      <div class="card-title"><span>📐</span> Kitchen Dimensions</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Kitchen Length (feet)</label>
+          <input type="number" id="kitchen_length" placeholder="e.g. 14" min="6" max="40" step="0.5">
+        </div>
+        <div class="field">
+          <label>Kitchen Width (feet)</label>
+          <input type="number" id="kitchen_width" placeholder="e.g. 10" min="6" max="40" step="0.5">
+        </div>
+        <div class="field">
+          <label>Ceiling Height (feet)</label>
+          <select id="ceiling_height">
+            <option value="8">Standard — 8 ft</option>
+            <option value="9">9 ft</option>
+            <option value="10">10 ft or higher</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>When was your home last remodeled?</label>
+          <select id="house_age_range">
+            <option value="2000_2026">2000 – Present</option>
+            <option value="1980_2000">1980 – 2000</option>
+            <option value="before_1980">Before 1980</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🔨</span> Structural Changes</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Are any walls being moved or removed?</div>
+          <div class="toggle-sub">Adds structural work, permits, and engineering</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="walls_moving">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Is sink, stove, or fridge moving locations?</div>
+          <div class="toggle-sub">Requires plumbing / gas line relocation</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="plumbing_moving">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Does electrical need upgrading?</div>
+          <div class="toggle-sub">Panel upgrade, new circuits, or older wiring</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="electrical_upgrade">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Next: Materials →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Materials & Scope -->
+  <div class="step-section" id="step-3">
+    <div class="card">
+      <div class="card-title"><span>🗄️</span> What's Included in the Remodel?</div>
+      <div class="scope-grid">
+        <div class="scope-item">
+          <input type="checkbox" id="inc_cabinets" checked>
+          <label for="inc_cabinets">Cabinets</label>
+        </div>
+        <div class="scope-item">
+          <input type="checkbox" id="inc_countertops" checked>
+          <label for="inc_countertops">Countertops</label>
+        </div>
+        <div class="scope-item">
+          <input type="checkbox" id="inc_flooring" checked>
+          <label for="inc_flooring">Flooring</label>
+        </div>
+        <div class="scope-item">
+          <input type="checkbox" id="inc_backsplash" checked>
+          <label for="inc_backsplash">Backsplash</label>
+        </div>
+        <div class="scope-item">
+          <input type="checkbox" id="inc_lighting" checked>
+          <label for="inc_lighting">Lighting</label>
+        </div>
+        <div class="scope-item">
+          <input type="checkbox" id="inc_painting" checked>
+          <label for="inc_painting">Painting</label>
+        </div>
+        <div class="scope-item">
+          <input type="checkbox" id="inc_plumbing" checked>
+          <label for="inc_plumbing">Plumbing Fixtures</label>
+        </div>
+        <div class="scope-item">
+          <input type="checkbox" id="inc_appliances">
+          <label for="inc_appliances">Appliances</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>✨</span> Material Quality</div>
+      <p style="font-size:0.82rem; color:#888; margin-bottom:16px;">Select your preference for each category</p>
+
+      <div class="field" style="margin-bottom:16px;">
+        <label>Cabinets</label>
+        <div class="tier-select" data-field="cabinet_tier">
+          <button class="tier-btn" data-val="budget">Budget</button>
+          <button class="tier-btn active" data-val="mid">Mid-Range</button>
+          <button class="tier-btn" data-val="premium">Premium</button>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Countertops</label>
+        <div class="tier-select" data-field="countertop_tier">
+          <button class="tier-btn" data-val="budget">Budget</button>
+          <button class="tier-btn active" data-val="mid">Mid-Range</button>
+          <button class="tier-btn" data-val="premium">Premium</button>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Flooring</label>
+        <div class="tier-select" data-field="flooring_tier">
+          <button class="tier-btn" data-val="budget">Budget</button>
+          <button class="tier-btn active" data-val="mid">Mid-Range</button>
+          <button class="tier-btn" data-val="premium">Premium</button>
+        </div>
+      </div>
+      <div class="field" id="appliance-tier-field" style="display:none; margin-bottom:16px;">
+        <label>Appliances</label>
+        <div class="tier-select" data-field="appliance_tier">
+          <button class="tier-btn" data-val="budget">Budget</button>
+          <button class="tier-btn active" data-val="mid">Mid-Range</button>
+          <button class="tier-btn" data-val="premium">Premium</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn-next" onclick="nextStep()">Get My Estimate →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Result -->
+  <div class="step-section" id="step-4">
+    <div class="result-card" id="resultCard">
+      <div class="result-label">Estimated Project Range</div>
+      <div class="result-range" id="resultRange">Calculating...</div>
+      <div class="result-note" id="resultSqft"></div>
+
+      <button class="btn-outline" onclick="toggleBreakdown()">View Cost Breakdown ↓</button>
+
+      <div class="breakdown-toggle" id="breakdown">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <div class="card" id="contactCard" style="display:none;">
+      <div class="card-title"><span>📋</span> Get a Detailed Proposal</div>
+      <p style="font-size:0.9rem; color:#666; margin-bottom:16px;">
+        Submit your estimate to get a full itemized proposal from our team, typically within 24 hours.
+      </p>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Any additional notes or questions?</label>
+        <textarea id="additional_notes" rows="3" placeholder="e.g. We'd like to keep our existing appliances, open to different cabinet styles..."></textarea>
+      </div>
+      <button class="btn-primary" id="submitBtn" onclick="submitEstimate()">📩 Send Me a Detailed Proposal</button>
+      <div class="success-banner" id="successBanner">
+        ✅ Got it! We'll prepare your detailed proposal and reach out within 24 hours.
+      </div>
+    </div>
+
+    <button class="btn-back" style="margin-top:12px; width:100%; padding:12px; background:white; color:#666; border:1.5px solid #e2e5ea; border-radius:12px; font-size:0.9rem; font-weight:600; cursor:pointer;" onclick="prevStep()">← Adjust Details</button>
+  </div>
+
+  <p class="disclaimer">
+    Estimates are for planning purposes only based on SF Bay Area 2025 rates.<br>
+    Final pricing depends on site conditions, material availability, and specific design choices.<br>
+    A licensed contractor will provide a binding written proposal after a site visit.
+  </p>
+</div>
+
+<script>
+  let currentStep = 1;
+  const totalSteps = 4;
+  let calculatedEstimate = null;
+  let breakdownVisible = false;
+
+  // Tier button handlers
+  document.querySelectorAll('.tier-select').forEach(group => {
+    group.querySelectorAll('.tier-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+
+  // Show/hide appliance tier
+  document.getElementById('inc_appliances').addEventListener('change', function() {
+    document.getElementById('appliance-tier-field').style.display = this.checked ? 'block' : 'none';
+  });
+
+  function getFormData() {
+    const tierVal = (field) => {
+      const group = document.querySelector(`.tier-select[data-field="${field}"]`);
+      const active = group?.querySelector('.tier-btn.active');
+      return active?.dataset.val || 'mid';
+    };
+
+    return {
+      client_name: document.getElementById('client_name').value,
+      client_email: document.getElementById('client_email').value,
+      client_phone: document.getElementById('client_phone').value,
+      project_address: document.getElementById('project_address').value,
+      kitchen_length: parseFloat(document.getElementById('kitchen_length').value) || 12,
+      kitchen_width: parseFloat(document.getElementById('kitchen_width').value) || 10,
+      ceiling_height: parseFloat(document.getElementById('ceiling_height').value) || 8,
+      house_age_range: document.getElementById('house_age_range').value,
+      walls_moving: document.getElementById('walls_moving').checked,
+      plumbing_moving: document.getElementById('plumbing_moving').checked,
+      electrical_upgrade: document.getElementById('electrical_upgrade').checked,
+      include_cabinets: document.getElementById('inc_cabinets').checked,
+      include_countertops: document.getElementById('inc_countertops').checked,
+      include_flooring: document.getElementById('inc_flooring').checked,
+      include_appliances: document.getElementById('inc_appliances').checked,
+      include_backsplash: document.getElementById('inc_backsplash').checked,
+      include_lighting: document.getElementById('inc_lighting').checked,
+      include_painting: document.getElementById('inc_painting').checked,
+      include_plumbing_fixtures: document.getElementById('inc_plumbing').checked,
+      cabinet_tier: tierVal('cabinet_tier'),
+      countertop_tier: tierVal('countertop_tier'),
+      flooring_tier: tierVal('flooring_tier'),
+      appliance_tier: tierVal('appliance_tier'),
+      additional_notes: document.getElementById('additional_notes')?.value || ''
+    };
+  }
+
+  async function calculateEstimate() {
+    const data = getFormData();
+    const res = await fetch('/api/estimates/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    return json.estimate;
+  }
+
+  async function nextStep() {
+    if (currentStep === 3) {
+      // Calculate before showing result
+      document.getElementById('resultRange').textContent = 'Calculating...';
+      document.getElementById('resultCard').classList.add('visible');
+      try {
+        const est = await calculateEstimate();
+        calculatedEstimate = est;
+        document.getElementById('resultRange').textContent = est.clientView.rangeLabel;
+        document.getElementById('resultSqft').textContent = `Based on ${est.sqft} sq ft kitchen`;
+        document.getElementById('contactCard').style.display = 'block';
+
+        // Build breakdown
+        const bd = document.getElementById('breakdown');
+        bd.innerHTML = est.lineItems.map(item => `
+          <div class="breakdown-item">
+            <span class="name">${item.name}</span>
+            <span class="amount">$${item.low.toLocaleString()} – $${item.high.toLocaleString()}</span>
+          </div>
+        `).join('');
+      } catch(e) {
+        document.getElementById('resultRange').textContent = 'Error — try again';
+      }
+    }
+
+    if (currentStep < totalSteps) {
+      document.getElementById(`step-${currentStep}`).classList.remove('active');
+      currentStep++;
+      document.getElementById(`step-${currentStep}`).classList.add('active');
+      updateDots();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function prevStep() {
+    if (currentStep > 1) {
+      document.getElementById(`step-${currentStep}`).classList.remove('active');
+      currentStep--;
+      document.getElementById(`step-${currentStep}`).classList.add('active');
+      updateDots();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  function updateDots() {
+    document.querySelectorAll('.step-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i < currentStep);
+    });
+  }
+
+  function toggleBreakdown() {
+    breakdownVisible = !breakdownVisible;
+    document.getElementById('breakdown').classList.toggle('visible', breakdownVisible);
+  }
+
+  async function submitEstimate() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    const data = getFormData();
+    try {
+      await fetch('/api/estimates/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      document.getElementById('successBanner').classList.add('visible');
+      btn.textContent = '✅ Submitted!';
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = '📩 Send Me a Detailed Proposal';
+    }
+  }
+</script>
+
+</body>
+</html>
